@@ -1,0 +1,20 @@
+{
+  "name": "PowderBrows Academy - Malwina Zięba",
+  "short_name": "PowderBrows",
+  "description": "Profesjonalny makijaż permanentny brwi, ust i kresek w Stalowej Woli. Szkolenia i zabiegi na najwyższym poziomie.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["beauty", "lifestyle"],
+  "lang": "pl"
+}

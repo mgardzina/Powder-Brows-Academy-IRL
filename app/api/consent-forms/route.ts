@@ -1,0 +1,213 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "../../../lib/prisma";
+import { auth } from "../../../lib/auth";
+import { generateConsentFormPdf } from "@/lib/pdfGenerator";
+import { sendConsentFormEmail, getFormTypeLabel } from "@/lib/sendConsentEmail";
+
+function normalizeName(name: string | undefined | null): string {
+  if (!name) return "";
+  return name
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function normalizePhone(phone: string | undefined | null): string {
+  if (!phone) return "";
+  return phone.replace(/\D/g, "");
+}
+
+// POST - zapisz nowy formularz (publiczny)
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    const formType = body.type || "HYALURONIC";
+
+    // Normalizacja danych klienckich zapobiegająca duplikatom
+    const normalizedName = normalizeName(body.imieNazwisko);
+    const normalizedPhone = normalizePhone(body.telefon);
+
+    // Find or create client by full name
+    const client = await prisma.client.upsert({
+      where: { imieNazwisko: normalizedName },
+      update: {
+        telefon: normalizedPhone,
+      },
+      create: {
+        imieNazwisko: normalizedName,
+        telefon: normalizedPhone,
+      },
+    });
+
+    const consentForm = await prisma.consentForm.create({
+      data: {
+        type: formType,
+        imieNazwisko: normalizedName,
+        email: body.email || null,
+        ulica: body.ulica || null,
+        kodPocztowy: body.kodPocztowy || null,
+        miasto: body.miasto || null,
+        dataUrodzenia: body.dataUrodzenia || null,
+        telefon: normalizedPhone,
+        miejscowoscData: body.miejscowoscData,
+        nazwaProduktu: body.nazwaProduktu || null,
+        obszarZabiegu: body.obszarZabiegu || null,
+        celEfektu: body.celEfektu || null,
+        przeciwwskazania: body.przeciwwskazania,
+        zgodaPrzetwarzanieDanych: Boolean(body.zgodaPrzetwarzanieDanych),
+        zgodaMarketing: Boolean(body.zgodaMarketing),
+        zgodaFotografie: Boolean(body.zgodaFotografie),
+        zgodaPomocPrawna: Boolean(body.zgodaPomocPrawna),
+        miejscaPublikacjiFotografii: body.miejscaPublikacjiFotografii || null,
+        podpisDane: body.podpisDane || null,
+        podpisMarketing: body.podpisMarketing || null,
+        podpisFotografie: body.podpisFotografie || null,
+        podpisRodo: body.podpisRodo || null,
+        podpisRodo2: body.podpisRodo2 || null,
+        informacjaDodatkowa: body.informacjaDodatkowa || null,
+        zastrzeniaKlienta: body.zastrzeniaKlienta || null,
+        numerZabiegu: body.numerZabiegu || null,
+        osobaPrzeprowadzajacaZabieg: body.osobaPrzeprowadzajacaZabieg || null,
+        // Treatment series
+        planowanaIloscZabiegow: body.planowanaIloscZabiegow || null,
+        odstepMiedzyZabiegami: body.odstepMiedzyZabiegami || null,
+        kolejneZabiegiOdstepy: body.kolejneZabiegiOdstepy || null,
+        iloscProduktu: body.iloscProduktu || null,
+        clientId: client.id,
+        // Digital Signature & Audit Log (Art. 78¹ KC - Forma Dokumentowa)
+        signatureStatus: body.signatureStatus || "PENDING",
+        signatureVerifiedAt: body.auditLog?.signedAt ? new Date(body.auditLog.signedAt) : null,
+        auditLog: body.auditLog || null,
+      },
+    });
+
+    // Generuj PDF i wyślij email PRZED zwróceniem odpowiedzi
+    let emailError: string | null = null;
+    try {
+      const pdfBuffer = await generateConsentFormPdf({
+        id: consentForm.id,
+        type: formType,
+        createdAt: consentForm.createdAt.toISOString(),
+        imieNazwisko: normalizedName,
+        email: body.email || null,
+        ulica: body.ulica || null,
+        kodPocztowy: body.kodPocztowy || null,
+        miasto: body.miasto || null,
+        dataUrodzenia: body.dataUrodzenia || null,
+        telefon: normalizedPhone,
+        miejscowoscData: body.miejscowoscData,
+        nazwaProduktu: body.nazwaProduktu || null,
+        obszarZabiegu: body.obszarZabiegu || null,
+        celEfektu: body.celEfektu || null,
+        przeciwwskazania: body.przeciwwskazania || {},
+        zgodaPrzetwarzanieDanych: Boolean(body.zgodaPrzetwarzanieDanych),
+        zgodaMarketing: Boolean(body.zgodaMarketing),
+        zgodaFotografie: Boolean(body.zgodaFotografie),
+        zgodaPomocPrawna: Boolean(body.zgodaPomocPrawna),
+        miejscaPublikacjiFotografii: body.miejscaPublikacjiFotografii || null,
+        podpisDane: body.podpisDane || null,
+        podpisMarketing: body.podpisMarketing || null,
+        podpisFotografie: body.podpisFotografie || null,
+        podpisRodo: body.podpisRodo || null,
+        podpisRodo2: body.podpisRodo2 || null,
+        informacjaDodatkowa: body.informacjaDodatkowa || null,
+        zastrzeniaKlienta: body.zastrzeniaKlienta || null,
+        numerZabiegu: body.numerZabiegu || null,
+        osobaPrzeprowadzajacaZabieg: body.osobaPrzeprowadzajacaZabieg || null,
+        planowanaIloscZabiegow: body.planowanaIloscZabiegow || null,
+        odstepMiedzyZabiegami: body.odstepMiedzyZabiegami || null,
+        kolejneZabiegiOdstepy: body.kolejneZabiegiOdstepy || null,
+        iloscProduktu: body.iloscProduktu || null,
+        signatureStatus: body.signatureStatus || "PENDING",
+        signatureVerifiedAt: body.auditLog?.signedAt || null,
+      });
+
+      const formTypeLabel = getFormTypeLabel(formType);
+      const safeName = normalizedName
+        .replace(/[^a-zA-Z0-9\s]/g, "")
+        .replace(/\s+/g, "_");
+      const date = new Date(consentForm.createdAt)
+        .toLocaleDateString("en-IE")
+        .replace(/\./g, "-")
+        .replace(/\//g, "-");
+      const pdfFilename = `Consent_form_${safeName}_${date}.pdf`;
+
+      const emailResult = await sendConsentFormEmail({
+        formId: consentForm.id,
+        clientName: normalizedName,
+        clientEmail: body.email || null,
+        formTypeLabel,
+        formDate: body.miejscowoscData,
+        pdfBuffer,
+        pdfFilename,
+      });
+
+      if (!emailResult.success) {
+        emailError = emailResult.error || "Unknown email error";
+        console.error("[PDF/Email] Sending error:", emailError);
+      } else {
+        console.log(
+          `[PDF] Generated and sent email for form ${consentForm.id}`
+        );
+      }
+    } catch (err) {
+      emailError = String(err);
+      console.error("[PDF/Email] Error during generation/sending:", err);
+    }
+
+    return NextResponse.json({
+      success: true,
+      id: consentForm.id,
+      emailSent: !emailError,
+      ...(emailError && { emailError }),
+    });
+  } catch (error) {
+    console.error("Error saving form:", error);
+    return NextResponse.json(
+      { success: false, error: "Error saving form", details: String(error) },
+      { status: 500 }
+    );
+  }
+}
+
+// GET - retrieve form list (authorized only)
+export async function GET() {
+  const session = await auth();
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const forms = await prisma.consentForm.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        type: true,
+        createdAt: true,
+        imieNazwisko: true,
+        telefon: true,
+        miejscowoscData: true,
+        zgodaPrzetwarzanieDanych: true,
+        zgodaMarketing: true,
+        zgodaFotografie: true,
+        podpisRodo: true,
+        podpisRodo2: true,
+        podpisMarketing: true,
+        podpisFotografie: true,
+        podpisDane: true,
+      },
+    });
+
+    return NextResponse.json({ success: true, forms });
+  } catch (error) {
+    console.error("Error retrieving forms:", error);
+    return NextResponse.json(
+      { success: false, error: "Error retrieving forms" },
+      { status: 500 }
+    );
+  }
+}

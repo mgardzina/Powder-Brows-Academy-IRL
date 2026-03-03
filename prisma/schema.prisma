@@ -1,0 +1,161 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum FormType {
+  LIP_AUGMENTATION
+  FACIAL_VOLUMETRY
+  NEEDLE_MESOTHERAPY
+  INJECTION_LIPOLYSIS
+  PERMANENT_MAKEUP
+  LASER_HAIR_REMOVAL
+  LASER_TATTOO_REMOVAL
+  WRINKLE_REDUCTION
+  EYELID_LIFT
+  TISSUE_STIMULATION
+  EYEBROW_TINTING
+  EYELASH_EXTENSION
+  EYEBROW_LAMINATION
+
+  // Deprecated (keep for backward compatibility)
+  HYALURONIC
+  PMU
+  LASER
+}
+
+// Klientka - identyfikowana po imieniu i nazwisku
+model Client {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Dane identyfikacyjne
+  imieNazwisko String  @unique // Klucz do łączenia formularzy
+  telefon      String? // Ostatni znany telefon
+
+  // Relacje
+  forms ConsentForm[]
+  notes ClientNote[]
+}
+
+enum NoteCategory {
+  NOTATKA // Ogólna notatka
+  ALERGIA // Alergie i przeciwwskazania
+  UWAGA // Ważne uwagi
+  PREFERENCJA // Preferencje klientki
+}
+
+// Notatki do klientki (alergie, uwagi, etc.)
+model ClientNote {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  content  String       @db.Text // Treść notatki
+  category NoteCategory @default(NOTATKA) // Kategoria notatki
+
+  // Relacja z klientką
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model ConsentForm {
+  id        String   @id @default(uuid())
+  type      FormType @default(LIP_AUGMENTATION)
+  createdAt DateTime @default(now())
+
+  // Dane osobowe
+  imieNazwisko String
+  email        String?
+  ulica        String?
+
+  // Relacja z historią zabiegów
+  treatmentHistory TreatmentHistory[] // Nowe pole
+  kodPocztowy      String?
+  miasto           String?
+  dataUrodzenia    String?
+  telefon          String
+  miejscowoscData  String
+
+  // Szczegóły zabiegu
+  nazwaProduktu String?
+  obszarZabiegu String?
+  celEfektu     String?
+  znieczulenie  String? // Nowe pole
+
+  // Przeciwwskazania (JSON)
+  przeciwwskazania Json
+
+  // Zgody
+  zgodaPrzetwarzanieDanych    Boolean
+  zgodaMarketing              Boolean
+  zgodaFotografie             Boolean
+  zgodaPomocPrawna            Boolean @default(false)
+  miejscaPublikacjiFotografii String?
+
+  // Podpisy (base64 images - duże teksty)
+  podpisDane       String? @db.Text
+  podpisMarketing  String? @db.Text
+  podpisFotografie String? @db.Text
+  podpisRodo       String? @db.Text
+  podpisRodo2      String? @db.Text
+
+  // Dodatkowe informacje
+  informacjaDodatkowa         String?
+  zastrzeniaKlienta           String?
+  numerZabiegu                String?
+  osobaPrzeprowadzajacaZabieg String?
+
+  // Seria zabiegowa (Facial Volumetry / Tissue Stimulation)
+  planowanaIloscZabiegow String?
+  odstepMiedzyZabiegami  String?
+  kolejneZabiegiOdstepy  String?
+  iloscProduktu          String?
+
+  // Digital Signature & Audit Log (Art. 78¹ KC - Forma Dokumentowa)
+  signatureStatus     String?   @default("PENDING") // PENDING, VERIFIED, SIGNED
+  signatureVerifiedAt DateTime?
+  auditLog            Json? // Pełny audit log dla zgodności prawnej
+
+  // Relacja z klientką
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id])
+}
+
+// Tymczasowe przechowywanie kodów OTP
+model OtpVerification {
+  id          String   @id @default(uuid())
+  phoneNumber String
+  code        String
+  formId      String? // Opcjonalne powiązanie z formularzem
+  expiresAt   DateTime
+  verified    Boolean  @default(false)
+  attempts    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([phoneNumber, code])
+}
+
+model AdminUser {
+  id           String  @id @default(uuid())
+  email        String  @unique
+  phoneNumber  String? @unique
+  passwordHash String
+  name         String?
+}
+
+model TreatmentHistory {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  date         DateTime // Data wykonania zabiegu
+  description  String // Opis zabiegu (np. ilość ml, parametry lasera)
+  znieczulenie String? // Informacja o znieczuleniu
+
+  formId String
+  form   ConsentForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+}

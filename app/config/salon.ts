@@ -1,0 +1,15 @@
+export const SALON_CONFIG = {
+  name: "PowderBrows Academy",
+  owner: "Malwina Zięba",
+  fullName: "PowderBrows Academy - Malwina Zięba",
+  address: "106 Lagan Rd, Cabra East, Dublin Industrial Estate",
+  city: "Dublin, Ireland",
+  zipCode: "D11",
+  nip: "",
+  phone: "+353 83 086 4175",
+  email: "powderbrows@gmail.com",
+  instagram: "https://www.instagram.com/powderbrowsacademy_dublin/",
+  instagramHandle: "@powderbrowsacademy_dublin",
+  website: "https://powderbrowsacademy.com",
+  accountNumber: "",
+};

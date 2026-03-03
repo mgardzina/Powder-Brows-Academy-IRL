@@ -1,0 +1,15 @@
+services:
+  app:
+    container_name: royal-lips-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:8080"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - HOSTNAME=0.0.0.0
+    restart: unless-stopped
