@@ -24,8 +24,13 @@ import { contraindicationsByFormType, FormType } from "@/types/booking";
 import AnatomyFaceSelector from "@/app/components/AnatomyFaceSelector";
 import AnatomyBodySelector from "@/app/components/AnatomyBodySelector";
 import { ZONES } from "@/types/face-zones";
+import { ZONES as PMU_ZONES } from "@/types/face-zone-pernament";
+import { ZONES as TISSUE_ZONES } from "@/types/face-zones-tissue";
+import { BODY_ZONES } from "@/types/body-zones";
+import { BODY_ZONES as TATTOO_BODY_ZONES } from "@/types/body-zonest-tatto";
 
 // Helper do tłumaczenia stref
+const ALL_ZONE_LOOKUPS = [...ZONES, ...PMU_ZONES, ...BODY_ZONES, ...TATTOO_BODY_ZONES, ...TISSUE_ZONES];
 const translateZones = (zonesString: string | null): string => {
   if (!zonesString) return "Not provided";
 
@@ -33,8 +38,8 @@ const translateZones = (zonesString: string | null): string => {
 
   return selectedIds
     .map((id) => {
-      const zone = ZONES.find((z) => z.id === id);
-      return zone ? zone.name : id; // Fallback to ID if name not found
+      const zone = ALL_ZONE_LOOKUPS.find((z) => z.id === id);
+      return zone ? zone.name : id;
     })
     .join(", ");
 };
@@ -558,18 +563,65 @@ export default function FormDetailsPage() {
                   Treatment Area
                 </label>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedForm.obszarZabiegu || ""}
-                    onChange={(e) =>
+                  (() => {
+                    const BODY_FORM_TYPES = ["LASER_HAIR_REMOVAL", "LASER_TATTOO_REMOVAL"];
+                    const isBodyForm = BODY_FORM_TYPES.includes(form.type);
+                    const isPMU = form.type === "PERMANENT_MAKEUP";
+                    const isTissue = form.type === "TISSUE_STIMULATION";
+
+                    const availableZones = isBodyForm
+                      ? (form.type === "LASER_TATTOO_REMOVAL" ? TATTOO_BODY_ZONES : BODY_ZONES)
+                      : isPMU
+                        ? PMU_ZONES
+                        : isTissue
+                          ? TISSUE_ZONES
+                          : ZONES;
+
+                    const selectedZones = (editedForm.obszarZabiegu || "")
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean);
+
+                    const toggleZone = (zoneId: string) => {
+                      const newSelected = selectedZones.includes(zoneId)
+                        ? selectedZones.filter((id) => id !== zoneId)
+                        : [...selectedZones, zoneId];
                       setEditedForm({
                         ...editedForm,
-                        obszarZabiegu: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-marble-border/40 border border-brand/20 rounded-lg focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none text-marble-text"
-                    placeholder="Treatment area"
-                  />
+                        obszarZabiegu: newSelected.join(", "),
+                      });
+                    };
+
+                    return (
+                      <div className="flex flex-wrap gap-2">
+                        {availableZones.map((zone) => (
+                          <button
+                            key={zone.id}
+                            type="button"
+                            onClick={() => toggleZone(zone.id)}
+                            className={`px-3 py-2 rounded-lg text-sm transition-all border ${
+                              selectedZones.includes(zone.id)
+                                ? "bg-brand text-black border-brand font-medium shadow-[0_0_10px_rgba(212,175,55,0.3)]"
+                                : "bg-marble-border/40 border-brand/20 text-marble-text hover:border-brand hover:text-brand"
+                            }`}
+                          >
+                            {zone.name}
+                          </button>
+                        ))}
+                        {selectedZones.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditedForm({ ...editedForm, obszarZabiegu: "" })
+                            }
+                            className="px-3 py-2 rounded-lg text-sm transition-all border border-red-500/30 text-red-400 hover:bg-red-500/10"
+                          >
+                            Clear all
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()
                 ) : (
                   <p className="text-marble-text">
                     {translateZones(form.obszarZabiegu)}
@@ -621,25 +673,42 @@ export default function FormDetailsPage() {
                   "LASER_TATTOO_REMOVAL",
                 ];
                 const isBodyForm = BODY_FORM_TYPES.includes(form.type);
-                const selectedZones = form.obszarZabiegu
-                  ? form.obszarZabiegu.split(",").map((s) => s.trim())
-                  : [];
+                const isPMU = form.type === "PERMANENT_MAKEUP";
+                const isTissue = form.type === "TISSUE_STIMULATION";
+                const currentZones = isEditing
+                  ? (editedForm.obszarZabiegu || "").split(",").map((s) => s.trim()).filter(Boolean)
+                  : form.obszarZabiegu
+                    ? form.obszarZabiegu.split(",").map((s) => s.trim())
+                    : [];
                 return (
                   <div className="mt-4 border-t border-brand/20 pt-4">
                     <label className="block text-sm font-medium text-ui-textSecondary mb-4">
                       Treatment Area Visualization
                     </label>
-                    <div className="bg-marble-border/20 rounded-xl border border-brand/15 p-6 flex justify-center pointer-events-none">
+                    <div className={`bg-marble-border/20 rounded-xl border border-brand/15 p-6 flex justify-center ${isEditing ? "" : "pointer-events-none"}`}>
                       <div
                         className={`w-full max-w-lg ${isBodyForm ? "aspect-[724/1024]" : "aspect-square"} relative`}
                       >
                         {isBodyForm ? (
                           <AnatomyBodySelector
-                            initialSelected={selectedZones}
+                            initialSelected={currentZones}
+                            onSelect={isEditing ? (selectedIds) => {
+                              setEditedForm({
+                                ...editedForm,
+                                obszarZabiegu: selectedIds.join(", "),
+                              });
+                            } : undefined}
                           />
                         ) : (
                           <AnatomyFaceSelector
-                            initialSelected={selectedZones}
+                            initialSelected={currentZones}
+                            customZones={isPMU ? PMU_ZONES : isTissue ? TISSUE_ZONES : undefined}
+                            onSelect={isEditing ? (selectedIds) => {
+                              setEditedForm({
+                                ...editedForm,
+                                obszarZabiegu: selectedIds.join(", "),
+                              });
+                            } : undefined}
                           />
                         )}
                       </div>
