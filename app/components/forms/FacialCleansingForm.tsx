@@ -16,21 +16,21 @@ import {
   ConsentFormData,
   ContraindicationWithFollowUp,
   rodoInfo,
-  mezoterapiaIglowaContraindications,
-  mezoterapiaIglowaCategoryBreaks,
-  mezoterapiaIglowaNaturalReactions,
-  mezoterapiaIglowaComplications,
-  mezoterapiaIglowaComplicationsVeryRare,
-  mezoterapiaIglowaPostCare,
+  oczyszczanieTwarzyContraindications,
+  oczyszczanieTwarzyCategoryBreaks,
+  oczyszczanieTwarzyNaturalReactions,
+  oczyszczanieTwarzyComplications,
+  oczyszczanieTwarzyComplicationsVeryRare,
+  oczyszczanieTwarzyPostCare,
 } from "../../../types/booking";
 import { SALON_CONFIG } from "@/app/config/salon";
 
-interface NeedleMesotherapyFormProps {
+interface FacialCleansingFormProps {
   onBack: () => void;
 }
 
 const initialFormData: ConsentFormData = {
-  type: "NEEDLE_MESOTHERAPY",
+  type: "FACIAL_CLEANSING",
   imieNazwisko: "",
   ulica: "",
   kodPocztowy: "",
@@ -43,7 +43,8 @@ const initialFormData: ConsentFormData = {
   obszarZabiegu: "",
   celEfektu: "",
   numerZabiegu: "",
-  przeciwwskazania: Object.entries(mezoterapiaIglowaContraindications).reduce(
+  metodaZabiegu: "",
+  przeciwwskazania: Object.entries(oczyszczanieTwarzyContraindications).reduce(
     (acc, [key, value]) => {
       const hasFollowUp = typeof value === "object" && value.hasFollowUp;
       return {
@@ -70,9 +71,9 @@ const initialFormData: ConsentFormData = {
   inneSchorzenia: "", // INITIALIZE
 };
 
-export default function NeedleMesotherapyForm({
+export default function FacialCleansingForm({
   onBack,
-}: NeedleMesotherapyFormProps) {
+}: FacialCleansingFormProps) {
   const [formData, setFormData] = useState<ConsentFormData>(initialFormData);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,11 +93,11 @@ export default function NeedleMesotherapyForm({
   const [isSignatureVerified, setIsSignatureVerified] = useState(false);
   const [auditLog, setAuditLog] = useState<AuditLogData | null>(null);
 
-  const contraindicationKeys = Object.keys(mezoterapiaIglowaContraindications);
+  const contraindicationKeys = Object.keys(oczyszczanieTwarzyContraindications);
   const currentContraindicationKey =
     contraindicationKeys[currentContraindicationIndex];
 
-  const currentContraindicationValue = mezoterapiaIglowaContraindications[
+  const currentContraindicationValue = oczyszczanieTwarzyContraindications[
     currentContraindicationKey
   ] as string | ContraindicationWithFollowUp;
   const currentContraindicationObject:
@@ -112,6 +113,13 @@ export default function NeedleMesotherapyForm({
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
+
+  // Auto-close wizard when all questions are answered
+  useEffect(() => {
+    if (isWizardComplete && showContraindicationsWizard) {
+      setShowContraindicationsWizard(false);
+    }
+  }, [isWizardComplete, showContraindicationsWizard]);
 
   const handleWizardAnswer = (value: boolean) => {
     handleContraindicationChange(currentContraindicationKey, value);
@@ -159,7 +167,7 @@ export default function NeedleMesotherapyForm({
     setFormData((prev) => ({ ...prev, telefon: formatted }));
   };
 
-  // Calculate age based on date of birth
+  // Oblicz wiek na podstawie daty urodzenia
 
   const isAgeValid = calculateAge(formData.dataUrodzenia) >= 16;
 
@@ -173,8 +181,8 @@ export default function NeedleMesotherapyForm({
     }));
   };
 
-  // Handler for verified signature
-  // Handler for verified signature
+  // Handler dla zweryfikowanego podpisu
+  // Handler dla zweryfikowanego podpisu
   const handleSignatureVerified = (
     _signatureData: string,
     audit: AuditLogData,
@@ -189,7 +197,7 @@ export default function NeedleMesotherapyForm({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Generate document content for hashing
+  // Generuj zawartość dokumentu do hashowania
   const getDocumentContent = () => {
     return JSON.stringify({
       type: formData.type,
@@ -208,7 +216,7 @@ export default function NeedleMesotherapyForm({
     const submissionData = {
       ...formData,
       email: email || null,
-      auditLog: auditLog, // Add audit log to data
+      auditLog: auditLog, // Dodaj audit log do danych
       signatureStatus: isSignatureVerified ? "SIGNED" : "PENDING",
     };
 
@@ -226,7 +234,9 @@ export default function NeedleMesotherapyForm({
       if (result.success) {
         setSubmitSuccess(true);
       } else {
-        alert("An error occurred while saving the form. Please try again.");
+        alert(
+          "An error occurred while saving the form. Please try again.",
+        );
       }
     } catch (error) {
       console.error("Error:", error);
@@ -263,7 +273,7 @@ export default function NeedleMesotherapyForm({
               }}
               className="bg-brand text-white px-8 py-3 rounded-xl hover:bg-brand-dark transition-colors"
             >
-              Fill out again
+              Fill in again
             </button>
             <BackButton
               onClick={onBack}
@@ -358,7 +368,7 @@ export default function NeedleMesotherapyForm({
                     : "text-marble-textSecondary"
                 }
               >
-                4. Procedure
+                4. Treatment
               </span>
               <span className="text-marble-textSecondary">→</span>
               <span
@@ -375,12 +385,12 @@ export default function NeedleMesotherapyForm({
 
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-serif text-marble-text mb-3 tracking-tighter drop-shadow-lg">
-              Needle <span className="text-brand">Mesotherapy</span>
+              Facial <span className="text-brand">Cleansing</span>
             </h1>
             <div className="flex items-center justify-center gap-4">
               <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-brand"></div>
               <p className="text-brand text-xs md:text-base font-light tracking-[0.4em] uppercase">
-                Needle mesotherapy procedure
+                Cavitation peeling, iontophoresis, micromassage.
               </p>
               <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-brand"></div>
             </div>
@@ -413,7 +423,7 @@ export default function NeedleMesotherapyForm({
                         handleInputChange("imieNazwisko", e.target.value)
                       }
                       className="w-full px-4 py-3 bg-ui-bg border border-[#D4AF37] rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 text-marble-text placeholder-marble-textSecondary outline-none transition-all"
-                      placeholder="Full Name"
+                      placeholder="First and Last Name"
                     />
                   </div>
                   <div>
@@ -433,7 +443,7 @@ export default function NeedleMesotherapyForm({
                   </div>
                   <div>
                     <label className="block text-sm text-ui-textSecondary mb-2 font-medium">
-                      Email Address
+                      E-mail Address
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-marble-textSecondary" />
@@ -459,7 +469,7 @@ export default function NeedleMesotherapyForm({
                           handleInputChange("ulica", e.target.value)
                         }
                         className="w-full px-4 py-3 bg-ui-bg border border-[#D4AF37] rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 text-marble-text placeholder-marble-textSecondary outline-none transition-all"
-                        placeholder="1/2 Example St."
+                        placeholder="123 Example Street"
                         autoComplete="street-address"
                       />
                     </div>
@@ -510,7 +520,7 @@ export default function NeedleMesotherapyForm({
                           formatBirthDate(e.target.value),
                         )
                       }
-                      placeholder="dd.mm.yyyy"
+                      placeholder="dd.mm.rrrr"
                       maxLength={10}
                       className={`w-full px-4 py-3 bg-ui-bg border rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 text-marble-text placeholder-marble-textSecondary outline-none transition-all ${
                         formData.dataUrodzenia && !isAgeValid
@@ -546,68 +556,74 @@ export default function NeedleMesotherapyForm({
                 </div>
               </section>
 
-              {/* Informacja o Zabiegu */}
+              {/* Treatment Information */}
               <section className="bg-gradient-emerald rounded-2xl border border-[#D4AF37] p-6 md:p-8">
                 <h2 className="text-2xl font-serif text-marble-text mb-6 flex items-center gap-3">
                   <span className="w-8 h-8 bg-brand text-black rounded-full flex items-center justify-center text-sm font-sans font-bold">
                     2
                   </span>
-                  Procedure Information
+                  Treatment Information
                 </h2>
                 <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] text-ui-textSecondary leading-relaxed space-y-4">
                   <p>
-                    Needle mesotherapy involves the direct injection of small
-                    doses of active substances intradermally into the areas to
-                    be treated using a thin needle. The injection of substances
-                    into the treated tissue area creates a depot from which the
-                    substance is released gradually.
+                    The facial cleansing procedure is a professional cosmetic
+                    treatment encompassing a range of cleansing, nourishing and
+                    regenerative techniques. Depending on the chosen method, the
+                    treatment may include: cavitation peeling, iontophoresis,
+                    micromassage, oxygen infusion, LED light therapy and other
+                    advanced cosmetic techniques.
                   </p>
                   <p>
-                    Indications for the procedure include: discolorations, tired
-                    skin requiring revitalization, seborrhea, weakened hair and
-                    hair loss, alopecia, cellulite — and it is also used in
-                    anti-aging skin prevention and in treating signs of skin
-                    aging related to age, sun exposure, and smoking.
+                    Indications for the procedure include: blackheads, enlarged
+                    pores, excessive sebum production, dull and tired skin,
+                    uneven skin tone, dehydration, weakened hydrolipid barrier,
+                    acne lesions and a general need for skin refreshment and
+                    regeneration.
                   </p>
                   <p>
-                    The needle mesotherapy procedure is performed using one of
-                    the selected products or a mixture of products. The
-                    procedure is always carried out after ruling out all
-                    contraindications. The client's needs and expectations are
-                    discussed during the consultation.
+                    The procedure is performed using professional cosmetic
+                    products individually selected for the skin&apos;s needs.
+                    Prior to the procedure, a medical interview is conducted to
+                    exclude contraindications and determine needs and
+                    expectations.
                   </p>
                   <p>
-                    The duration of the procedure depends on individual skin
-                    characteristics, but on average takes about an hour. To
-                    achieve optimal results lasting approximately 6–12 months, a
-                    full series of treatments is recommended, repeated every 2–4
-                    weeks. Needle mesotherapy is not a permanent procedure; to
-                    maintain the effect, a maintenance session every 3–6 months
-                    is recommended.
+                    The duration of the procedure depends on the chosen method
+                    and skin condition, averaging 45 minutes to 1.5 hours. For
+                    optimal results, regular treatments at intervals of 3–4
+                    weeks are recommended.
                   </p>
                 </div>
               </section>
 
-              {/* Metoda Zabiegu */}
+              {/* Treatment Type */}
               <section className="bg-gradient-emerald rounded-2xl border border-[#D4AF37] p-6 md:p-8">
                 <h2 className="text-2xl font-serif text-marble-text mb-6 flex items-center gap-3">
                   <span className="w-8 h-8 bg-brand text-black rounded-full flex items-center justify-center text-sm font-sans font-bold">
                     3
                   </span>
-                  Treatment Method
+                  Treatment Type
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                   {[
-                    { value: "Mesotherapy", label: "Mesotherapy" },
                     {
-                      value: "Platelet-rich plasma (PRP)",
-                      label: "Platelet-rich plasma",
+                      value: "Facial cleansing",
+                      label: "Facial cleansing",
                     },
-                    { value: "Plasma + exosomes", label: "Plasma + exosomes" },
                     {
-                      value: "Polylactic acid (PLA)",
-                      label: "Polylactic acid",
+                      value: "Hydrolipid barrier repair",
+                      label: "Hydrolipid barrier repair",
                     },
+                    {
+                      value: "Combined acne therapy",
+                      label: "Combined acne therapy",
+                    },
+                    { value: "Pro XN", label: "Pro XN" },
+                    {
+                      value: "LED light therapy",
+                      label: "LED light therapy",
+                    },
+                    { value: "Skin analysis", label: "Skin analysis" },
                   ].map((method) => (
                     <button
                       key={method.value}
@@ -626,239 +642,309 @@ export default function NeedleMesotherapyForm({
                   ))}
                 </div>
 
-                {/* Mesotherapy description */}
-                {formData.metodaZabiegu === "Mesotherapy" && (
+                {/* Description: Facial cleansing */}
+                {formData.metodaZabiegu === "Facial cleansing" && (
                   <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] text-ui-textSecondary leading-relaxed space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                     <h3 className="font-serif text-marble-text text-lg">
-                      Needle Mesotherapy
+                      Facial Cleansing (cavitation, ultrasound, oxygen infusion)
                     </h3>
                     <p>
-                      Needle mesotherapy involves the direct injection of small
-                      doses of active substances intradermally into the areas to
-                      be treated using a thin needle. The injection of substances
-                      into the treated tissue area creates a depot from which the
-                      substance is released gradually.
-                    </p>
-                    <p>
-                      Indications for the procedure include: discolorations,
-                      tired skin requiring revitalization, seborrhea, weakened
-                      hair and hair loss, alopecia, cellulite — and it is also
-                      used in anti-aging skin prevention and in treating signs of
-                      skin aging related to age, sun exposure, and smoking.
-                    </p>
-                    <p>
-                      The needle mesotherapy procedure is performed using one of
-                      the selected products or a mixture of products. The
-                      procedure is always carried out after ruling out all
-                      contraindications. The client's needs and expectations are
-                      discussed during the consultation.
+                      A comprehensive cleansing treatment combining several
+                      advanced technologies. Cavitation peeling uses ultrasonic
+                      waves to gently remove dead skin cells, blackheads and
+                      impurities from pores. Ultrasound assists the absorption
+                      of active substances into deeper skin layers, increasing
+                      the effectiveness of the products used. Oxygen infusion
+                      delivers concentrated oxygen along with active ingredients
+                      directly to the skin.
                     </p>
                     <p className="font-medium text-marble-text">
                       Treatment effects:
                     </p>
                     <ul className="space-y-1 text-sm">
                       <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>skin revitalization
-                        and rejuvenation
+                        <span className="text-brand">•</span>deep pore
+                        cleansing and blackhead removal
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>reduction of
-                        discolorations and evening out skin tone
+                        <span className="text-brand">•</span>smoothing and
+                        evening out skin tone
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>smoothing of fine
-                        wrinkles
+                        <span className="text-brand">•</span>skin hydration and
+                        oxygenation
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>improved skin
-                        firmness and elasticity
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>deep hydration and
-                        nourishment of the skin
-                      </li>
-                    </ul>
-                    <p className="text-sm italic">
-                      The duration of the procedure depends on individual skin
-                      characteristics, but on average takes about an hour. To
-                      achieve optimal results lasting approximately 6–12 months,
-                      a full series of treatments is recommended, repeated every
-                      2–4 weeks.
-                    </p>
-                  </div>
-                )}
-
-                {/* PRP description */}
-                {formData.metodaZabiegu === "Platelet-rich plasma (PRP)" && (
-                  <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] text-ui-textSecondary leading-relaxed space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <h3 className="font-serif text-marble-text text-lg">
-                      Platelet-Rich Plasma (PRP) Treatment
-                    </h3>
-                    <p>
-                      This is a natural regenerative therapy that uses your own
-                      blood. During the procedure, a small amount of blood is
-                      drawn and then placed in a special centrifuge. This
-                      separates the platelet-rich plasma, full of growth factors
-                      responsible for tissue regeneration and repair.
-                    </p>
-                    <p>
-                      The preparation is injected into the facial skin using the
-                      mesotherapy method, where it intensively stimulates repair
-                      and regenerative processes.
-                    </p>
-                    <p className="font-medium text-marble-text">
-                      Treatment effects:
-                    </p>
-                    <ul className="space-y-1 text-sm">
-                      <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>improved skin
-                        firmness and elasticity
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>smoothing of fine
-                        wrinkles
+                        <span className="text-brand">•</span>improved elasticity
+                        and firmness
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-brand">•</span>brightening and
                         refreshing the complexion
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>stimulation of
-                        collagen and elastin production
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>natural skin
-                        regeneration and rejuvenation
-                      </li>
                     </ul>
                     <p className="text-sm italic">
-                      The procedure is completely safe as it uses biological
-                      material from your own body, thereby minimizing the risk
-                      of allergic reactions.
+                      The treatment is non-invasive and painless. Recommended for
+                      all skin types, especially skin with blackheads, enlarged
+                      pores, dull and tired skin.
                     </p>
                   </div>
                 )}
 
-                {/* Plasma + exosomes description */}
-                {formData.metodaZabiegu === "Plasma + exosomes" && (
+                {/* Description: Hydrolipid barrier repair */}
+                {formData.metodaZabiegu ===
+                  "Hydrolipid barrier repair" && (
                   <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] text-ui-textSecondary leading-relaxed space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                     <h3 className="font-serif text-marble-text text-lg">
-                      Platelet-Rich Plasma + Exosomes – Advanced Skin
-                      Regeneration
+                      Hydrolipid Barrier Repair
                     </h3>
                     <p>
-                      The combination of platelet-rich plasma (PRP) with
-                      exosomes is a modern therapy that even more powerfully
-                      stimulates the skin for repair and rejuvenation.
+                      A treatment dedicated to dehydrated, sensitive and
+                      irritated skin whose protective barrier has been
+                      compromised. The hydrolipid barrier is the skin&apos;s natural
+                      protective layer that guards against water loss, external
+                      factors and microorganisms. Its weakening leads to
+                      dryness, redness and excessive skin reactivity.
                     </p>
                     <p>
-                      During the procedure, a small amount of blood is drawn,
-                      from which we obtain plasma rich in growth factors. It is
-                      then combined with exosomes — microscopic biological
-                      messengers that support cell-to-cell communication and
-                      accelerate regenerative processes. The preparation is
-                      injected into the facial skin using the mesotherapy method.
-                    </p>
-                    <p className="text-sm italic">
-                      This is one of the most advanced biostimulating procedures,
-                      combining natural regeneration with modern biotechnology
-                      for even better skin rejuvenation results.
-                    </p>
-                  </div>
-                )}
-
-                {/* Polylactic acid description */}
-                {formData.metodaZabiegu === "Polylactic acid (PLA)" && (
-                  <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] text-ui-textSecondary leading-relaxed space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <h3 className="font-serif text-marble-text text-lg">
-                      Polylactic Acid (PLA) – Collagen Biostimulation
-                    </h3>
-                    <p>
-                      Polylactic acid (PLA – Poly-L-lactic acid) is a substance
-                      used in aesthetic medicine as a biostimulator — a
-                      preparation that stimulates the skin to produce its own
-                      collagen. As a result, the skin gradually becomes firmer,
-                      thicker, and more taut.
-                    </p>
-                    <p>
-                      The preparation is injected intradermally using the needle
-                      mesotherapy method. After injection, the polylactic acid
-                      microparticles form a scaffold around which the body builds
-                      new collagen fibers. The effect builds gradually over
-                      several weeks after the procedure.
+                      During the treatment, products rich in ceramides, fatty
+                      acids, cholesterol and moisturising ingredients are used to
+                      rebuild and strengthen the skin&apos;s hydrolipid mantle.
                     </p>
                     <p className="font-medium text-marble-text">
                       Treatment effects:
                     </p>
                     <ul className="space-y-1 text-sm">
                       <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>stimulation of the
-                        body's own collagen production
+                        <span className="text-brand">•</span>restoration of the
+                        skin&apos;s natural protective barrier
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>improved skin
-                        firmness and tightness
+                        <span className="text-brand">•</span>deep hydration and
+                        reduced feeling of tightness
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-brand">•</span>reduction of
-                        sagging and smoothing of wrinkles
+                        redness and irritation
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>improved facial
-                        oval and contour
+                        <span className="text-brand">•</span>strengthened skin
+                        resistance to external factors
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-brand">•</span>long-lasting
-                        rejuvenation effect (up to 2 years)
+                        <span className="text-brand">•</span>restored skin
+                        comfort and smoothness
                       </li>
                     </ul>
                     <p className="text-sm italic">
-                      Treatment effects build gradually — full results are
-                      visible after approximately 4–6 weeks. A series of 2–3
-                      treatments at 4–6 week intervals is recommended for
-                      optimal results.
+                      Especially recommended after intensive exfoliating
+                      treatments, during winter months and for skin exposed to
+                      environmental factors.
                     </p>
                   </div>
                 )}
-              </section>
 
-              {/* Szczegóły Zabiegu */}
-              <section className="bg-gradient-emerald rounded-2xl border border-[#D4AF37] p-6 md:p-8">
-                <h2 className="text-2xl font-serif text-marble-text mb-6 flex items-center gap-3">
-                  <span className="w-8 h-8 bg-brand text-black rounded-full flex items-center justify-center text-sm font-sans font-bold">
-                    4
-                  </span>
-                  Procedure Details
-                </h2>
-                {/* Treatment area */}
-                <div>
-                  <label className="block text-sm text-ui-textSecondary mb-2 font-medium">
-                    Treatment area
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
-                    {[
-                      "Face",
-                      "Neck",
-                      "Décolletage",
-                      "Eye Area",
-                      "Thigh Area",
-                      "Scalp",
-                    ].map((area) => (
-                      <button
-                        key={area}
-                        type="button"
-                        onClick={() => handleInputChange("obszarZabiegu", area)}
-                        className={`py-3 px-4 rounded-xl border-2 transition-all font-medium text-sm ${
-                          formData.obszarZabiegu === area
-                            ? "border-brand bg-brand text-white"
-                            : "border-[#D4AF37] bg-ui-bg text-ui-textSecondary hover:border-brand hover:text-brand"
-                        }`}
-                      >
-                        {area}
-                      </button>
-                    ))}
+                {/* Description: Combined acne therapy */}
+                {formData.metodaZabiegu === "Combined acne therapy" && (
+                  <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] text-ui-textSecondary leading-relaxed space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <h3 className="font-serif text-marble-text text-lg">
+                      Combined Acne Therapy
+                    </h3>
+                    <p>
+                      A comprehensive therapy targeted at individuals struggling
+                      with acne at various stages. The treatment combines
+                      several cleansing, sebum regulation and anti-inflammatory
+                      techniques, individually tailored to the skin&apos;s needs.
+                    </p>
+                    <p>
+                      The treatment protocol may include: cavitation cleansing,
+                      blackhead extraction, application of antibacterial and
+                      sebum-regulating products, as well as anti-inflammatory
+                      light therapy.
+                    </p>
+                    <p className="font-medium text-marble-text">
+                      Treatment effects:
+                    </p>
+                    <ul className="space-y-1 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>reduction of active
+                        acne lesions
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>cleansing and
+                        tightening of pores
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>regulation of
+                        excessive sebum production
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>reduced
+                        inflammation and redness
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>improved overall
+                        skin condition and appearance
+                      </li>
+                    </ul>
+                    <p className="text-sm italic">
+                      For optimal results, a series of treatments at intervals
+                      of 2–3 weeks is recommended. Duration and intensity are
+                      tailored individually.
+                    </p>
                   </div>
-                </div>
+                )}
+
+                {/* Description: Pro XN */}
+                {formData.metodaZabiegu === "Pro XN" && (
+                  <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] text-ui-textSecondary leading-relaxed space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <h3 className="font-serif text-marble-text text-lg">
+                      Pro XN
+                    </h3>
+                    <p>
+                      An advanced professional treatment utilising innovative
+                      technology for intensive skin regeneration and
+                      rejuvenation. Pro XN combines the action of active
+                      ingredients with advanced methods of delivering them to
+                      deeper skin layers.
+                    </p>
+                    <p>
+                      The treatment stimulates the skin&apos;s natural repair
+                      processes, supports collagen and elastin production and
+                      improves microcirculation. The protocol is individually
+                      tailored depending on the skin&apos;s needs and condition.
+                    </p>
+                    <p className="font-medium text-marble-text">
+                      Treatment effects:
+                    </p>
+                    <ul className="space-y-1 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>intensive skin
+                        regeneration and rejuvenation
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>improved firmness
+                        and elasticity
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>smoothing of fine
+                        lines and wrinkles
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>brightening and
+                        evening out skin tone
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>deep nourishment
+                        and hydration of the skin
+                      </li>
+                    </ul>
+                    <p className="text-sm italic">
+                      Designed for individuals seeking advanced anti-aging care
+                      and intensive skin revitalisation.
+                    </p>
+                  </div>
+                )}
+
+                {/* Description: LED light therapy */}
+                {formData.metodaZabiegu === "LED light therapy" && (
+                  <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] text-ui-textSecondary leading-relaxed space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <h3 className="font-serif text-marble-text text-lg">
+                      LED Light Therapy
+                    </h3>
+                    <p>
+                      A non-invasive therapy using LED light of various
+                      wavelengths to stimulate skin cells. Each light colour
+                      affects different processes: red light stimulates collagen
+                      production and accelerates regeneration, blue light has
+                      antibacterial properties and is effective against acne, and
+                      yellow light supports microcirculation and reduces redness.
+                    </p>
+                    <p className="font-medium text-marble-text">
+                      Treatment effects:
+                    </p>
+                    <ul className="space-y-1 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>stimulation of
+                        collagen and elastin production
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>reduction of
+                        inflammation and acne
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>accelerated skin
+                        regeneration processes
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>improved skin tone
+                        and brightened complexion
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>wrinkle reduction
+                        and improved elasticity
+                      </li>
+                    </ul>
+                    <p className="text-sm italic">
+                      The treatment is completely painless and safe. It can be
+                      used as a standalone therapy or as a complement to other
+                      cosmetic treatments. Recommended series: 6–10 treatments
+                      at intervals of 3–7 days.
+                    </p>
+                  </div>
+                )}
+
+                {/* Description: Skin analysis */}
+                {formData.metodaZabiegu === "Skin analysis" && (
+                  <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] text-ui-textSecondary leading-relaxed space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <h3 className="font-serif text-marble-text text-lg">
+                      Skin Analysis
+                    </h3>
+                    <p>
+                      Professional skin analysis using specialised diagnostic
+                      equipment. The examination allows for an accurate
+                      assessment of the skin&apos;s condition, its needs and the
+                      identification of problems invisible to the naked eye.
+                    </p>
+                    <p>
+                      During the analysis, the following are assessed: hydration
+                      level, elasticity, wrinkle depth, pore condition, sebum
+                      level, discolouration, hydrolipid barrier condition and
+                      skin sensitivity. Based on the results, the specialist
+                      selects an individual home and salon care plan.
+                    </p>
+                    <p className="font-medium text-marble-text">
+                      What you gain:
+                    </p>
+                    <ul className="space-y-1 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>precise
+                        determination of skin type and condition
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>identification of
+                        hidden skin problems
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>individual salon
+                        care plan
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>selection of
+                        appropriate home care cosmetics
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand">•</span>ability to monitor
+                        therapy effects over time
+                      </li>
+                    </ul>
+                    <p className="text-sm italic">
+                      Skin analysis is the ideal first step before starting any
+                      skin therapy. It allows for informed selection of
+                      treatments and cosmetics.
+                    </p>
+                  </div>
+                )}
               </section>
 
               <section className="bg-gradient-emerald rounded-2xl border border-[#D4AF37] p-6 md:p-8">
@@ -874,7 +960,7 @@ export default function NeedleMesotherapyForm({
                 {/* Medications Input */}
                 <div className="bg-ui-bg p-5 rounded-xl border border-[#D4AF37] mb-6">
                   <h3 className="font-serif text-marble-text text-lg mb-2">
-                    CONTRAINDICATIONS TO THE PROCEDURE
+                    CONTRAINDICATIONS FOR THE PROCEDURE
                   </h3>
                   <label className="block text-sm text-ui-textSecondary mb-2 font-medium">
                     Please list all medications taken in the last 6 months
@@ -882,7 +968,7 @@ export default function NeedleMesotherapyForm({
                   <textarea
                     rows={3}
                     className="w-full px-4 py-3 bg-gradient-emerald border border-[#D4AF37] rounded-xl focus:border-brand outline-none text-sm text-marble-text placeholder-marble-textSecondary"
-                    placeholder="Enter medications or enter 'NONE'..."
+                    placeholder="Enter medications or type 'NONE'..."
                     value={
                       (formData.informacjaDodatkowa || "")
                         .split("\n")
@@ -917,7 +1003,7 @@ export default function NeedleMesotherapyForm({
                   />
                 </div>
 
-                {showContraindicationsWizard ? (
+                {showContraindicationsWizard && !isWizardComplete ? (
                   <div className="bg-ui-bg p-6 rounded-xl border border-[#D4AF37] max-w-2xl mx-auto shadow-sm">
                     {/* Category Header */}
 
@@ -926,7 +1012,7 @@ export default function NeedleMesotherapyForm({
                         Question {currentContraindicationIndex + 1} of{" "}
                         {contraindicationKeys.length}
                       </span>
-                      <div className="h-2 w-24 bg-ui-border rounded-full overflow-hidden">
+                      <div className="h-2 w-24 bg-black/20 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-brand transition-all duration-300"
                           style={{
@@ -972,7 +1058,7 @@ export default function NeedleMesotherapyForm({
                                 className="w-full px-4 py-3 bg-ui-bg border border-[#D4AF37] rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 text-marble-text placeholder-marble-textSecondary outline-none transition-all"
                                 placeholder={
                                   currentContraindicationObject.followUpPlaceholder ||
-                                  "Provide details..."
+                                  "Please provide details..."
                                 }
                               />
                             </div>
@@ -990,7 +1076,7 @@ export default function NeedleMesotherapyForm({
                             currentContraindicationKey
                           ] === false
                             ? "border-green-500 bg-green-500 text-white"
-                            : "bg-ui-bg border-[#D4AF37] text-ui-textSecondary active:border-green-500 active:bg-green-500 active:text-white md:hover:border-green-500 md:hover:bg-green-500 md:hover:text-brand"
+                            : "bg-ui-bg border-[#D4AF37] text-ui-textSecondary active:border-green-500 active:bg-green-500 active:text-white md:hover:border-green-500 md:hover:bg-green-500 md:hover:text-white"
                         }`}
                       >
                         NO
@@ -1004,7 +1090,7 @@ export default function NeedleMesotherapyForm({
                             currentContraindicationKey
                           ] === true
                             ? "border-red-500 bg-red-500 text-white"
-                            : "bg-ui-bg border-[#D4AF37] text-ui-textSecondary active:border-red-500 active:bg-red-500 active:text-white md:hover:border-red-500 md:hover:bg-red-500 md:hover:text-brand"
+                            : "bg-ui-bg border-[#D4AF37] text-ui-textSecondary active:border-red-500 active:bg-red-500 active:text-white md:hover:border-red-500 md:hover:bg-red-500 md:hover:text-white"
                         }`}
                       >
                         YES
@@ -1064,7 +1150,7 @@ export default function NeedleMesotherapyForm({
                       </button>
                     </div>
 
-                    {Object.entries(mezoterapiaIglowaContraindications).map(
+                    {Object.entries(oczyszczanieTwarzyContraindications).map(
                       ([key, value], index) => {
                         const questionText =
                           typeof value === "string" ? value : value.text;
@@ -1122,22 +1208,22 @@ export default function NeedleMesotherapyForm({
                   <span className="w-8 h-8 bg-brand text-black rounded-full flex items-center justify-center text-sm font-sans font-bold">
                     6
                   </span>
-                  Information on Side Effects and Complications
+                  Side Effects and Complications
                 </h2>
 
                 <div className="space-y-6">
                   {/* Common side effects */}
                   <div className="bg-ui-bg p-5 rounded-xl border border-[#D4AF37]">
                     <p className="text-sm font-medium text-marble-text mb-3">
-                      POSSIBLE REACTIONS AFTER THE PROCEDURE – COMMON
+                      POSSIBLE REACTIONS AFTER THE PROCEDURE — COMMON
                     </p>
                     <p className="text-sm text-ui-textSecondary mb-3">
                       I have been informed about the procedure and the
-                      possibility of natural bodily reactions after the
-                      procedure:
+                      possibility of natural body reactions occurring after the
+                      treatment:
                     </p>
                     <ul className="space-y-2 text-sm text-ui-textSecondary">
-                      {mezoterapiaIglowaNaturalReactions.map(
+                      {oczyszczanieTwarzyNaturalReactions.map(
                         (reaction, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-brand">∙</span>
@@ -1147,19 +1233,18 @@ export default function NeedleMesotherapyForm({
                       )}
                     </ul>
                     <p className="text-sm font-bold text-brand mt-4">
-                      NOTE! Needle mesotherapy performed during menstruation may
-                      be more painful, as pain sensitivity is usually increased
-                      at this time.
+                      NOTE! Skin during menstruation may be more sensitive and
+                      reactive, which may affect comfort during the procedure.
                     </p>
                   </div>
 
-                  {/* Rzadkie powikłania */}
+                  {/* Rare complications */}
                   <div className="bg-ui-bg p-5 rounded-xl border border-[#D4AF37]">
                     <p className="text-sm font-medium text-marble-text mb-3">
-                      POSSIBLE COMPLICATIONS AFTER THE PROCEDURE – RARE
+                      POSSIBLE COMPLICATIONS AFTER THE PROCEDURE — RARE
                     </p>
                     <ul className="space-y-2 text-sm text-ui-textSecondary">
-                      {mezoterapiaIglowaComplications.map(
+                      {oczyszczanieTwarzyComplications.map(
                         (complication, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-brand">∙</span>
@@ -1170,13 +1255,13 @@ export default function NeedleMesotherapyForm({
                     </ul>
                   </div>
 
-                  {/* Bardzo rzadkie powikłania - NEW SECTION */}
+                  {/* Very rare complications */}
                   <div className="bg-ui-bg p-5 rounded-xl border border-[#D4AF37]">
                     <p className="text-sm font-medium text-marble-text mb-3">
-                      POSSIBLE COMPLICATIONS AFTER THE PROCEDURE – VERY RARE
+                      POSSIBLE COMPLICATIONS AFTER THE PROCEDURE — VERY RARE
                     </p>
                     <ul className="space-y-2 text-sm text-ui-textSecondary">
-                      {mezoterapiaIglowaComplicationsVeryRare.map(
+                      {oczyszczanieTwarzyComplicationsVeryRare.map(
                         (complication, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-brand">∙</span>
@@ -1196,17 +1281,19 @@ export default function NeedleMesotherapyForm({
                   <span className="w-8 h-8 bg-brand text-black rounded-full flex items-center justify-center text-sm font-sans font-bold">
                     7
                   </span>
-                  Post-Procedure Instructions
+                  Post-Treatment Recommendations
                 </h2>
 
                 <div className="bg-ui-bg p-5 rounded-xl border border-[#D4AF37] mb-6">
                   <p className="text-sm text-ui-textSecondary leading-relaxed mb-4">
-                    <strong>POST-PROCEDURE INSTRUCTIONS</strong>
-                    <br />I hereby declare that I have been informed of the need
-                    to follow these post-procedure instructions:
+                    <strong>POST-TREATMENT RECOMMENDATIONS</strong>
+                    <br />
+                    I hereby declare that I have been informed about the
+                    necessity to follow the recommendations below after the
+                    procedure:
                   </p>
                   <ul className="space-y-2 text-sm text-ui-textSecondary">
-                    {mezoterapiaIglowaPostCare.map((instruction, index) => (
+                    {oczyszczanieTwarzyPostCare.map((instruction, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <span className="text-brand">∙</span>
                         <span
@@ -1252,7 +1339,7 @@ export default function NeedleMesotherapyForm({
                   {/* Signature Area for RODO */}
                   <div className="mt-8">
                     <SignaturePad
-                      label="Client Signature (Consent to data processing)"
+                      label="Client Signature (Consent for data processing)"
                       value={formData.podpisRodo || ""}
                       onChange={(sig) => {
                         handleInputChange("podpisRodo", sig);
@@ -1339,18 +1426,18 @@ export default function NeedleMesotherapyForm({
           {/* KROK 4: ZABIEG */}
           {currentStep === "TREATMENT" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {/* Skutki Uboczne i Powikłania */}
+              {/* Side Effects and Complications */}
               <section className="bg-gradient-emerald rounded-2xl border border-[#D4AF37] p-6 md:p-8">
                 <h2 className="text-2xl font-serif text-marble-text mb-6 flex items-center gap-3">
                   <span className="w-8 h-8 bg-brand text-black rounded-full flex items-center justify-center text-sm font-sans font-bold">
                     5
                   </span>
-                  Information on Side Effects and Complications
+                  Side Effects and Complications
                 </h2>
                 <div className="space-y-6">
                   <p className="text-sm text-ui-textSecondary mb-4">
                     I have been informed about the procedure and the possibility
-                    of natural risks:
+                    of natural risks occurring:
                   </p>
 
                   <div className="bg-ui-bg p-5 rounded-xl border border-[#D4AF37]">
@@ -1358,7 +1445,7 @@ export default function NeedleMesotherapyForm({
                       POSSIBLE NATURAL REACTIONS AFTER THE PROCEDURE:
                     </p>
                     <ul className="space-y-2 text-sm text-ui-textSecondary">
-                      {mezoterapiaIglowaNaturalReactions.map(
+                      {oczyszczanieTwarzyNaturalReactions.map(
                         (reaction, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-brand">∙</span>
@@ -1374,7 +1461,7 @@ export default function NeedleMesotherapyForm({
                       POSSIBLE COMPLICATIONS AFTER THE PROCEDURE:
                     </p>
                     <ul className="space-y-2 text-sm text-ui-textSecondary">
-                      {mezoterapiaIglowaComplications.map(
+                      {oczyszczanieTwarzyComplications.map(
                         (complication, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-brand">∙</span>
@@ -1387,7 +1474,7 @@ export default function NeedleMesotherapyForm({
                 </div>
               </section>
 
-              {/* Zalecenia Pozabiegowe */}
+              {/* Post-Treatment Recommendations */}
               <section className="bg-gradient-emerald rounded-2xl border border-[#D4AF37] p-6 md:p-8">
                 <h2 className="text-2xl font-serif text-marble-text mb-6 flex items-center gap-3">
                   <span className="w-8 h-8 bg-brand text-black rounded-full flex items-center justify-center text-sm font-sans font-bold">
@@ -1398,11 +1485,11 @@ export default function NeedleMesotherapyForm({
                 <div className="bg-ui-bg p-5 rounded-xl border border-[#D4AF37]">
                   <p className="text-sm text-ui-textSecondary leading-relaxed mb-4">
                     <strong>
-                      I commit to following these post-procedure instructions:
+                      I commit to following the recommendations below:
                     </strong>
                   </p>
                   <ul className="space-y-2 text-sm text-ui-textSecondary">
-                    {mezoterapiaIglowaPostCare.map((instruction, index) => (
+                    {oczyszczanieTwarzyPostCare.map((instruction, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <span className="text-brand">∙</span>
                         <span
@@ -1420,161 +1507,73 @@ export default function NeedleMesotherapyForm({
                 </div>
               </section>
 
-              {/* Regulamin Salonu */}
+              {/* Salon Rules */}
               <section className="bg-gradient-emerald rounded-2xl border border-[#D4AF37] p-6 md:p-8">
                 <h2 className="text-2xl font-serif text-marble-text mb-6 flex items-center gap-3">
                   <span className="w-8 h-8 bg-brand text-black rounded-full flex items-center justify-center text-sm font-sans font-bold">
                     7
                   </span>
-                  Salon Terms & Conditions
+                  Salon Rules
                 </h2>
                 <div className="bg-ui-bg p-5 rounded-xl border border-[#D4AF37]">
                   <p className="text-sm text-ui-textSecondary mb-4 font-medium uppercase tracking-wide">
-                    I am aware of the following rules arising from the Salon's
-                    terms and conditions:
+                    I am aware of the following rules resulting from the salon
+                    regulations:
                   </p>
                   <ol className="list-decimal pl-5 space-y-3 text-sm text-ui-textSecondary leading-relaxed">
                     <li>
-                      Booking a procedure appointment means full acceptance of
-                      the terms and conditions and the rules listed below.
+                      Booking a procedure means full acceptance of the
+                      regulations and the rules listed below.
                     </li>
                     <li>
-                      When booking a permanent makeup appointment, a deposit of
-                      50% of the procedure value is required.
+                      When booking an appointment, it is worth making sure there
+                      are no contraindications for the procedure.
                     </li>
                     <li>
-                      The client has 3 days from the time of booking to pay the
-                      deposit. If not paid, the reservation is automatically
-                      cancelled and the previously reserved slot becomes
-                      available to other clients.
-                    </li>
-                    <li>
-                      If the procedure takes place, its price is reduced by the
-                      deposit amount.
-                    </li>
-                    <li>
-                      The deposit can be paid by bank transfer. The account
-                      number is available on the website, on-site, by phone, or
-                      on FB:{" "}
-                      <span className="font-medium text-marble-text">
-                        ACCOUNT NUMBER 76249000050000460039252048
-                      </span>{" "}
-                      — in the transfer title, please include the procedure date
-                      and the client’s full name.
-                    </li>
-                    <li>
-                      When booking an appointment it is worth making sure there
-                      are no contraindications to the procedure.
-                    </li>
-                    <li>
-                      Consultation regarding a permanent makeup procedure is
-                      always free of charge. If you have any doubts, book a free
+                      If you have any doubts about the procedure, arrange a free
                       consultation by phone.
                     </li>
                     <li>
-                      The client may cancel an appointment up to 3 days before
-                      the scheduled date. If the cancellation occurs less than 3
-                      days before the scheduled procedure, the client must find
-                      another person to take their slot. If no one is found, the
-                      deposit is forfeited.
+                      The Client has the right to cancel the appointment 24
+                      hours before the scheduled date. Last-minute cancellation,
+                      i.e. on the same day, results in being placed on our
+                      &quot;Blacklist&quot;. We understand exceptional situations
+                      and unforeseen circumstances (which should be confirmed
+                      e.g. with a medical certificate).
                     </li>
                     <li>
-                      The client may reschedule their appointment no later than
-                      24 hours before the planned visit. Last-minute
-                      cancellation on the same day results in being placed on
-                      our &ldquo;Blacklist&rdquo;. We understand exceptional
-                      situations and random events (these must be confirmed e.g.
-                      with a medical certificate).
+                      The Client has the right to reschedule the appointment no
+                      later than 24 hours before the scheduled visit.
                     </li>
                     <li>
-                      Clients who have ever had permanent makeup in a given area
-                      (even barely visible) must inform the reception at the
-                      time of booking, as the procedure may need to be preceded
-                      by laser removal of old pigment traces, which requires
-                      different timing and equipment.
+                      The Specialist has the right to refuse performing the
+                      procedure if health or skin contraindications are found
+                      that prevent safely carrying out the treatment.
                     </li>
                     <li>
-                      During the permanent makeup procedure, a visualization is
-                      performed and the appropriate method is selected. The
-                      method and pigments are chosen by the liner artist and
-                      matched to the client’s natural beauty.
+                      The Client is obliged to inform the Specialist about any
+                      changes in health status, medications taken and allergies
+                      before the procedure.
                     </li>
                     <li>
-                      The liner artist has the right to refuse to perform the
-                      service if the client’s shape expectations are
-                      inconsistent with the classic eyebrow layout.
-                    </li>
-                    <li>
-                      When deciding to have the procedure, one should
-                      familiarize oneself with the works, style, and techniques
-                      of the salon’s liner artists.
-                    </li>
-                    <li>
-                      If the client does not accept the proposed shape, method,
-                      and pigment color and decides to cancel during the
-                      appointment — the deposit is non-refundable.
-                    </li>
-                    <li>
-                      If a client has comments about the color/shape etc. within
-                      2 months of the procedure, they may report them (and they
-                      will be corrected free of charge); any suggestions after 2
-                      months will be priced individually.
-                    </li>
-                    <li>
-                      If a client has a free touch-up scheduled within 50 days
-                      of the procedure date and does not attend / does not
-                      cancel 24 hours in advance, the touch-up is considered
-                      completed and the next scheduled touch-up is payable. Each
-                      1 month of delay incurs an additional fee of 100 PLN.
-                    </li>
-                    <li>
-                      If a client is from abroad and cannot attend the touch-up
-                      within 50 days of the first procedure, it is possible to
-                      extend the period to 3 months after the first
-                      pigmentation. The liner artist must be informed and will
-                      note it in the system. If the client does not come within
-                      3 months, the touch-up is payable.
-                    </li>
-                    <li>
-                      If a client discovers she is pregnant after the procedure
-                      and postpones the touch-up until after giving birth, and
-                      wishes a touch-up after approx. one year, the procedure
-                      price is 50% of the current permanent makeup price.
-                    </li>
-                    <li>
-                      Permanent makeup changes its intensity over the following
-                      months; after one year a paid touch-up is recommended (50%
-                      of current price). If additional pigmentation is needed,
-                      its cost is 200 PLN. A touch-up after a minimum of 2 years
-                      costs 100% of the current price or in exceptional
-                      situations is priced individually.
-                    </li>
-                    <li>
-                      Touch-ups after other salons are always priced
-                      individually and usually treated as a service from scratch
-                      plus the cost of laser removal priced individually.
+                      The Salon is not responsible for consequences resulting
+                      from not following the post-treatment recommendations
+                      provided by the Specialist.
                     </li>
                     <li>
                       We reserve the right to change individual points of the
-                      terms and conditions.
+                      regulations.
                     </li>
                     <li>
-                      We reserve the right to change a previously agreed
-                      appointment time by arrangement with the client on another
-                      convenient date.
-                    </li>
-                    <li>
-                      The touch-up after approximately one year mainly applies
-                      to permanent eyebrow makeup, as pigment in other areas
-                      lasts longer — e.g. lips after one year are clearly tinted
-                      and do not require a touch-up. Eyebrows are in the T-zone,
-                      which results in faster pigment fading.
+                      We reserve the right to change a previously scheduled
+                      appointment date after agreeing with the Client on another
+                      date convenient for both parties.
                     </li>
                   </ol>
                 </div>
               </section>
 
-              {/* Oświadczenia */}
+              {/* Declarations */}
               <section className="bg-gradient-emerald rounded-2xl border border-[#D4AF37] p-6 md:p-8">
                 <h2 className="text-2xl font-serif text-marble-text mb-6 flex items-center gap-3">
                   <span className="w-8 h-8 bg-brand text-black rounded-full flex items-center justify-center text-sm font-sans font-bold">
@@ -1584,7 +1583,8 @@ export default function NeedleMesotherapyForm({
                 </h2>
                 <div className="bg-ui-bg p-5 rounded-xl mb-6 border border-[#D4AF37]">
                   <h4 className="font-serif text-brand text-lg mb-4 uppercase tracking-wider">
-                    DECLARATION AND INFORMED CONSENT FOR NEEDLE MESOTHERAPY
+                    DECLARATION AND INFORMED CONSENT FOR FACIAL CLEANSING
+                    PROCEDURE
                   </h4>
                   <p className="text-sm text-ui-textSecondary mb-4 italic">
                     I, the undersigned, after a detailed interview and
@@ -1594,97 +1594,94 @@ export default function NeedleMesotherapyForm({
                   <div className="space-y-4 text-sm text-ui-textSecondary leading-relaxed">
                     <p>
                       <strong>Health status and responsibility:</strong> The
-                      Specialist informed me about the contraindications to the
-                      procedure. I declare that none of them apply to me (incl.
-                      pregnancy, diabetes, blood disorders, active infections).
+                      Specialist informed me about contraindications for the
+                      procedure. I declare that none of them apply to me
+                      (including pregnancy, epilepsy, cancer, active
+                      tuberculosis, hyperthyroidism, metal implants in the
+                      treatment area).
                     </p>
                     <p>
-                      I provided full and truthful information about my health.
-                      I am fully aware that concealing information or providing
-                      false data will be treated as my contribution to any
-                      potential damage. In the case of concealing
-                      contraindications, I take full responsibility for any
-                      negative effects and waive all claims against the person
-                      performing the procedure.
+                      I have provided full and truthful information about my
+                      health status. I am fully aware that concealing
+                      information or providing false data will be treated as my
+                      contribution to any potential harm. In case of concealing
+                      contraindications, I take full responsibility for the
+                      negative effects of the procedure and waive all claims
+                      against the person performing the procedure.
                     </p>
 
                     <p>
-                      <strong>Procedure information and hygiene:</strong> I
-                      received comprehensive information about the needle
-                      mesotherapy procedure, its technique, and purpose. I had
-                      the opportunity to ask questions and received clear
-                      answers.
+                      <strong>Treatment information and hygiene:</strong> I have
+                      received comprehensive information about the facial
+                      cleansing procedure, the technique of its performance and
+                      its purpose. I had the opportunity to ask questions and
+                      received clear answers.
                     </p>
                     <p>
-                      I confirm that the materials used for the procedure
-                      (needles, syringes) are sterile, single-use, and were
-                      opened in my presence. The highest hygiene standards are
-                      maintained in the Salon.
+                      I confirm that the equipment and materials used for the
+                      procedure are clean and disinfected. The highest hygiene
+                      standards are maintained at the Salon.
                     </p>
 
                     <p>
                       <strong>Procedure and recovery:</strong> I have been
-                      informed that after the procedure, swelling and skin
-                      redness are natural reactions that usually subside within
-                      3–4 days depending on lifestyle. Minor bruising at
-                      injection sites may also occur.
+                      informed that after the procedure, natural symptoms may
+                      include skin redness, slight irritation or a feeling of
+                      tightness, which usually subside within a few hours to 2
+                      days.
                     </p>
                     <p>
-                      I know I can resume daily activities after the procedure,
-                      however I commit to limiting the use of makeup and
-                      irritating cosmetics for 24 hours.
+                      I know that I can return to daily activities after the
+                      procedure, however I commit to limiting the use of makeup
+                      and irritating cosmetics for 12 hours and using sun
+                      protection.
                     </p>
 
                     <p>
                       <strong>Frequency and durability of effects:</strong> I
                       have been informed that the duration of the procedure
-                      depends on the area and skin characteristics (avg. approx.
-                      1h).
+                      depends on the chosen method and skin condition (averaging
+                      45 min – 1.5h).
                     </p>
                     <p>
-                      To achieve optimal results lasting approx. 6–12 months, a
-                      full series of treatments is recommended (usually 3 to 6
-                      sessions), every 2–4 weeks.
-                    </p>
-                    <p>
-                      I understand that needle mesotherapy is not a permanent
-                      procedure and a maintenance session every 3–6 months is
-                      recommended to preserve the effect.
+                      For optimal results, regular treatments at intervals of
+                      3–4 weeks are recommended.
                     </p>
 
                     <p>
-                      <strong>No guarantee and individual factors:</strong> I
-                      have been informed that results depend on many individual
-                      factors (age, biochemistry, skin type, lifestyle) and an
-                      identical result cannot be fully guaranteed for every
-                      client.
+                      <strong>
+                        No guarantee and individual factors:
+                      </strong>{" "}
+                      I have been informed that the treatment effects depend on
+                      many factors (age, biochemistry, skin type, lifestyle) and
+                      it is not possible to fully guarantee identical results for
+                      every client.
                     </p>
                     <p>
-                      I declare that failure to achieve the expected subjective
+                      I declare that failure to achieve my expected subjective
                       result will not be grounds for claims, provided the
-                      procedure was performed in accordance with professional
+                      procedure was performed according to professional
                       standards.
                     </p>
 
                     <p>
                       <strong>Qualifications and decision:</strong> I declare
                       that I am aware that the Specialist performing the
-                      procedure is not a medical doctor of aesthetic medicine,
-                      but has extensive experience and training in the performed
-                      procedures.
+                      procedure has the appropriate qualifications and training
+                      in the cosmetic procedures performed.
                     </p>
                     <p>
                       I make the decision to undergo the procedure consciously,
-                      voluntarily, and at my own responsibility, accepting the
+                      voluntarily and at my own responsibility, accepting the
                       procedural risk.
                     </p>
 
                     <p className="font-bold border-t border-[#D4AF37]/50 pt-4 mt-4">
-                      TERMS ACCEPTANCE: I declare that I have familiarized
-                      myself with the Salon's terms and conditions available on
-                      the website and at reception. I fully accept its
-                      provisions, including the rules regarding reservations,
-                      deposits, corrections, and complaints.
+                      ACCEPTANCE OF REGULATIONS: I declare that I have read the
+                      Salon Regulations available on the website and at
+                      reception. I fully accept its provisions, including rules
+                      regarding reservations, deposits, corrections and
+                      complaints.
                     </p>
 
                     <p className="mt-4 font-medium text-brand">
@@ -1694,18 +1691,18 @@ export default function NeedleMesotherapyForm({
                   </div>
                 </div>
 
-                {/* Podpis pod Zabiegiem */}
+                {/* Treatment Consent Signature */}
                 <div className="bg-ui-bg backdrop-blur-sm rounded-2xl border border-[#D4AF37] p-6 md:p-8 mt-8">
                   <h2 className="text-xl font-serif text-marble-text mb-4 flex items-center gap-2">
                     <span className="w-6 h-6 bg-brand text-black rounded-full flex items-center justify-center text-xs font-sans font-bold">
                       9
                     </span>
-                    Consent Confirmation for Procedure
+                    Treatment Consent Confirmation
                   </h2>
                   <p className="text-sm text-ui-textSecondary mb-6 italic">
-                    By signing below I confirm that I have read the above
-                    information, risks, and instructions and give my informed
-                    consent to the procedure.
+                    By signing below, I confirm that I have read the above
+                    information, risks and recommendations and give informed
+                    consent for the procedure.
                   </p>
                   <SignaturePad
                     label="Client Signature (Required)"
@@ -1735,7 +1732,7 @@ export default function NeedleMesotherapyForm({
                   disabled={!formData.podpisDane}
                   className="bg-brand text-white py-3 px-8 rounded-xl text-lg font-medium shadow-lg hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  Next (Additional Consents) →
+                  Next (Additional consents) →
                 </button>
               </div>
             </div>
@@ -1762,10 +1759,10 @@ export default function NeedleMesotherapyForm({
                       Marketing Consent
                     </h4>
                     <p className="text-sm text-ui-textSecondary leading-relaxed mb-6">
-                      I consent to receiving information about news, promotions,
+                      I consent to receiving information about news, promotions
                       and special offers from{" "}
-                      <strong>{rodoInfo.firmaNazwa}</strong> electronically (SMS
-                      / Email).
+                      <strong>{rodoInfo.firmaNazwa}</strong> via electronic
+                      means (SMS / E-mail).
                     </p>
                     <SignaturePad
                       label="Signature (I agree)"
@@ -1786,9 +1783,9 @@ export default function NeedleMesotherapyForm({
                       Consent for Use of Image
                     </h4>
                     <p className="text-sm text-ui-textSecondary leading-relaxed mb-4">
-                      I give my free consent for the recording and distribution
-                      of my image (photos/video of procedure results) for
-                      promotional purposes of the {SALON_CONFIG.name} salon.
+                      I give free consent for recording and distributing my
+                      image (photos/videos of treatment results) for promotional
+                      purposes of {SALON_CONFIG.name} salon.
                     </p>
 
                     <div className="mb-6">
@@ -1828,7 +1825,7 @@ export default function NeedleMesotherapyForm({
                   onClick={() => setCurrentStep("TREATMENT")}
                   className="text-brand hover:text-brand-dark px-6 py-3 font-medium transition-colors"
                 >
-                  ← Back to procedure
+                  ← Back to treatment
                 </button>
                 <button
                   type="submit"
@@ -1841,7 +1838,7 @@ export default function NeedleMesotherapyForm({
                       Saving...
                     </div>
                   ) : (
-                    "Submit and Send Card"
+                    "Confirm and Submit Form"
                   )}
                 </button>
               </div>

@@ -13,7 +13,8 @@ export type FormType =
   | 'TISSUE_STIMULATION'
   | 'EYEBROW_TINTING'
   | 'EYELASH_EXTENSION'
-  | 'EYEBROW_LAMINATION';
+  | 'EYEBROW_LAMINATION'
+  | 'FACIAL_CLEANSING';
 
 export interface ConsentFormData {
   type: FormType;
@@ -34,6 +35,7 @@ export interface ConsentFormData {
   obszarZabiegu: string;
   celEfektu: string;
   numerZabiegu?: string; // "first treatment" / "subsequent treatment"
+  metodaZabiegu?: string; // Treatment method (e.g. facial cleansing types)
 
   // Contraindications (Dictionary key -> value, value can be boolean for checkboxes or string for follow-up fields)
   przeciwwskazania: Record<string, boolean | string | null>;
@@ -1663,6 +1665,92 @@ export const eyelashExtensionPostCare: string[] = [
   "Sleep on your back or avoid pressing your face into the pillow.",
 ];
 
+// ─── Facial Cleansing (Oczyszczanie Twarzy) ──────────────────────────────────
+
+export const oczyszczanieTwarzyCategoryBreaks: Record<number, string> = {
+  0: "ABSOLUTE CONTRAINDICATIONS",
+  8: "RELATIVE CONTRAINDICATIONS",
+};
+
+export const oczyszczanieTwarzyContraindications: Record<string, string | ContraindicationWithFollowUp> = {
+  ciaza: "Are you pregnant or breastfeeding?",
+  epilepsja: "Do you suffer from epilepsy?",
+  nowotwory: "Do you have or have you had any cancer?",
+  gruzlica: "Do you have active tuberculosis?",
+  nadczynnosc: "Do you suffer from hyperthyroidism?",
+  implantyMetalowe: {
+    text: "Do you have metal implants in the treatment area?",
+    hasFollowUp: true,
+    followUpPlaceholder: "If yes, please specify...",
+  },
+  chorobySkory: {
+    text: "Do you have any active skin conditions in the treatment area (e.g. eczema, psoriasis, herpes, acne rosacea)?",
+    hasFollowUp: true,
+    followUpPlaceholder: "If yes, which ones?...",
+  },
+  alergiaKosmetyki: {
+    text: "Are you allergic to any cosmetic ingredients?",
+    hasFollowUp: true,
+    followUpPlaceholder: "If yes, which ones?...",
+  },
+  leki: {
+    text: "Are you currently taking any medications (e.g. retinoids, antibiotics, blood thinners)?",
+    hasFollowUp: true,
+    followUpPlaceholder: "If yes, which ones?...",
+  },
+  zabiegiInwazyjne: {
+    text: "Have you had any invasive facial procedures in the last 2 weeks (e.g. peels, laser, microneedling)?",
+    hasFollowUp: true,
+    followUpPlaceholder: "If yes, which ones?...",
+  },
+  opryszczka: "Do you have an active herpes infection?",
+  cukrzyca: "Do you suffer from diabetes?",
+  rozrusznikSerca: "Do you have a pacemaker?",
+  krowiankowa: "Do you have any autoimmune diseases?",
+  inneSchorzenia: {
+    text: "Do you have any other health conditions that the specialist should be aware of?",
+    hasFollowUp: true,
+    followUpPlaceholder: "If yes, please describe...",
+  },
+};
+
+export const oczyszczanieTwarzyNaturalReactions: string[] = [
+  "skin redness (usually subsides within a few hours to 2 days)",
+  "slight skin irritation or tightness",
+  "temporary increased skin sensitivity",
+  "mild tingling or warmth sensation during and after the procedure",
+  "slight skin flaking (especially after cavitation peeling)",
+  "temporary intensification of skin blemishes (purging phase)",
+];
+
+export const oczyszczanieTwarzyComplications: string[] = [
+  "prolonged redness or irritation (beyond 2 days)",
+  "allergic reaction to cosmetic products used",
+  "skin hypersensitivity or reactive skin response",
+  "post-inflammatory hyperpigmentation (in predisposed skin types)",
+  "capillary breakage (in sensitive or couperose skin)",
+];
+
+export const oczyszczanieTwarzyComplicationsVeryRare: string[] = [
+  "bacterial skin infection (in case of impaired skin barrier)",
+  "contact dermatitis",
+  "herpes reactivation",
+  "scarring (extremely rare, mainly in predisposed individuals)",
+];
+
+export const oczyszczanieTwarzyPostCare: string[] = [
+  "Avoid applying makeup for at least 12 hours after the procedure.",
+  "Do not use exfoliating products (acids, scrubs, retinol) for 3–5 days after the procedure.",
+  "Apply sunscreen with SPF 30+ daily — the skin is more susceptible to UV damage after the procedure.",
+  "Avoid sauna, swimming pool, and intense physical activity for 24–48 hours.",
+  "Moisturise the skin with gentle, fragrance-free products recommended by the specialist.",
+  "Do not touch or rub your face with unwashed hands.",
+  "Avoid alcohol-based cosmetics and toners for a few days.",
+  "Drink plenty of water to support skin hydration from the inside.",
+  "CAUTION! Follow the post-treatment recommendations strictly.",
+  "CAUTION! Any adverse reactions should be reported immediately to the Specialist performing the procedure.",
+];
+
 // Mapping of form types to sets of questions
 export const contraindicationsByFormType: Record<FormType, Record<string, string | ContraindicationWithFollowUp>> = {
   LIP_AUGMENTATION: modelowanieUstContraindications,
@@ -1679,6 +1767,7 @@ export const contraindicationsByFormType: Record<FormType, Record<string, string
   EYEBROW_TINTING: eyebrowTintingContraindications,
   EYEBROW_LAMINATION: eyebrowLaminationContraindications,
   EYELASH_EXTENSION: eyelashExtensionContraindications,
+  FACIAL_CLEANSING: oczyszczanieTwarzyContraindications,
 };
 
 // Backwards compatibility (for legacy imports)

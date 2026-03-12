@@ -601,13 +601,6 @@ export default function FacialVolumetryForm({
                     of the epidermis, therefore it is not without risk.
                   </p>
                   <p>
-                    The procedure is performed using products such as: Stylage
-                    L, Stylage XL (hyaluronic acid) or Neauvia Stimulate,
-                    Radiesse (tissue stimulators). The choice of preparation
-                    depends on the individual needs of the client and expected
-                    effects.
-                  </p>
-                  <p>
                     The procedure always takes place after excluding all
                     contraindications. In a conversation with the Client, their
                     needs and expectations are determined, and the specialist

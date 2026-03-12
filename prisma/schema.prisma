@@ -21,6 +21,7 @@ enum FormType {
   EYEBROW_TINTING
   EYELASH_EXTENSION
   EYEBROW_LAMINATION
+  FACIAL_CLEANSING
 
   // Deprecated (keep for backward compatibility)
   HYALURONIC
@@ -87,6 +88,7 @@ model ConsentForm {
   obszarZabiegu String?
   celEfektu     String?
   znieczulenie  String? // Nowe pole
+  metodaZabiegu String? // Treatment method (e.g. Mesotherapy, PRP)
 
   // Przeciwwskazania (JSON)
   przeciwwskazania Json

@@ -41,6 +41,7 @@ function getFormTypeLabel(type: string): string {
     EYEBROW_LAMINATION: "Eyebrow Lamination",
     EYELASH_EXTENSION: "Eyelash Extension",
     EYELID_LIFT: "Eyelid Lift",
+    FACIAL_CLEANSING: "Facial Cleansing",
     HYALURONIC: "Hyaluronic Acid",
     PMU: "Permanent Makeup",
     LASER: "Laser",

@@ -21,6 +21,7 @@ const FORM_TYPE_BADGE: Record<string, { label: string; color: string }> = {
   EYEBROW_TINTING:     { label: "Brow Tinting",         color: "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" },
   EYELASH_EXTENSION:   { label: "Lash Extensions",      color: "bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30" },
   EYEBROW_LAMINATION:  { label: "Brow Lamination",      color: "bg-lime-500/20 text-lime-400 border border-lime-500/30" },
+  FACIAL_CLEANSING:    { label: "Facial Cleansing",    color: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30" },
 };
 
 interface ConsentFormSummary {

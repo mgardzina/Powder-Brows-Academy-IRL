@@ -612,11 +612,6 @@ export default function InjectionLipolysisForm({
                     diet and exercise.
                   </p>
                   <p>
-                    The preparation is injected directly into the fatty tissue
-                    of the treated area using a special needle. The preparation
-                    used is: Cincelar.
-                  </p>
-                  <p>
                     After the preparation is applied, the Client receives a
                     massage so that the injected active substances are evenly
                     distributed. The massage also helps to reduce any swelling

@@ -106,6 +106,12 @@ export default function SelectionScreen({ onSelect }: SelectionScreenProps) {
             title="Tissue Stimulation"
             subtitle="Lifting procedure"
           />
+          <SelectionCard
+            onClick={() => onSelect("FACIAL_CLEANSING")}
+            icon={<Eraser className="w-10 h-10" />}
+            title="Facial Cleansing"
+            subtitle="Facial cleansing"
+          />
         </div>
 
         <div className="mt-16 text-center flex gap-6 justify-center items-center">

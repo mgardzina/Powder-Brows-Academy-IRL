@@ -76,6 +76,7 @@ interface ConsentFormFull {
   nazwaProduktu: string | null;
   obszarZabiegu: string | null;
   celEfektu: string | null;
+  metodaZabiegu: string | null;
   przeciwwskazania: Record<string, boolean | string | null>;
   zgodaPrzetwarzanieDanych: boolean;
   zgodaMarketing: boolean;
@@ -110,6 +111,7 @@ const formTypeLabels: Record<string, string> = {
   EYEBROW_LAMINATION: "Eyebrow lamination",
   EYELASH_EXTENSION: "Eyelash extension",
   EYELID_LIFT: "Eyelid lift",
+  FACIAL_CLEANSING: "Facial cleansing",
 };
 
 export default function FormDetailsPage() {
@@ -535,6 +537,16 @@ export default function FormDetailsPage() {
               Treatment Details
             </h2>
             <div className="space-y-4">
+              {form.metodaZabiegu && (
+                <div>
+                  <label className="block text-sm font-medium text-ui-textSecondary mb-1">
+                    Treatment Method
+                  </label>
+                  <p className="text-marble-text">
+                    {form.metodaZabiegu}
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-ui-textSecondary mb-1">
                   Product/Preparation

@@ -177,6 +177,10 @@ import {
   eyebrowTintingContraindications,
   eyebrowTintingPostCare,
   eyebrowLaminationContraindications,
+  oczyszczanieTwarzyContraindications,
+  oczyszczanieTwarzyNaturalReactions,
+  oczyszczanieTwarzyComplications,
+  oczyszczanieTwarzyPostCare,
   hyaluronicContraindications,
   hyaluronicNaturalReactions,
   hyaluronicPostCare,
@@ -201,6 +205,7 @@ interface ConsentFormData {
   nazwaProduktu?: string | null;
   obszarZabiegu?: string | null;
   celEfektu?: string | null;
+  metodaZabiegu?: string | null;
   przeciwwskazania: Record<string, string | boolean | null>;
   zgodaPrzetwarzanieDanych: boolean;
   zgodaMarketing: boolean;
@@ -343,6 +348,15 @@ function getFormContent(type: string): FormContent {
         title: "CONSENT FORM FOR EYELID LIFT",
         subtitle: "Eyelid Lift",
         contraindications: hyaluronicContraindications,
+      };
+    case "FACIAL_CLEANSING":
+      return {
+        title: "CONSENT FORM FOR FACIAL CLEANSING",
+        subtitle: "Facial Cleansing",
+        contraindications: oczyszczanieTwarzyContraindications,
+        naturalReactions: oczyszczanieTwarzyNaturalReactions,
+        complications: { czeste: oczyszczanieTwarzyComplications, rzadkie: [], bardzoRzadkie: [] },
+        postCare: oczyszczanieTwarzyPostCare,
       };
     // Legacy types
     case "HYALURONIC":
@@ -951,6 +965,16 @@ function ConsentFormPDF({
         </View>
 
         {/* Treatment details */}
+        {form.metodaZabiegu && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Treatment Method</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Method:</Text>
+              <Text style={styles.value}>{form.metodaZabiegu}</Text>
+            </View>
+          </View>
+        )}
+
         {(form.nazwaProduktu || form.iloscProduktu || form.celEfektu) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Treatment Details</Text>
