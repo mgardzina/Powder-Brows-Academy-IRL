@@ -13,6 +13,15 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/static/picture/logo_jg2.png',
+        destination: '/logo.png',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
